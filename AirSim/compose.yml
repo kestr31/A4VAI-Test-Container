@@ -1,0 +1,35 @@
+services:
+  airsim-binary:
+    image:            ${AIRSIM_BINARY_IMAGE}
+    container_name:   ${AIRSIM_BINARY_CONTAINER}
+    environment:
+      # -----------STATIC VALUE DO NOT MODIFY------------
+      DISPLAY:                    ${DISPLAY}
+      WAYLAND_DISPLAY:            ${WAYLAND_DISPLAY}
+      XDG_RUNTIME_DIR:            ${XDG_RUNTIME_DIR}
+      # -------------------------------------------------
+    volumes:
+      # -----------STATIC VALUE DO NOT MODIFY------------
+      - ${X11_SOCKET_DIR}:${X11_SOCKET_DIR}
+      - ${PULSEAUDIO_DIR}:/run/user/1000/pulse
+      - ${AIRSIM_WORKSPACE}:/home/ue4/workspace
+      # --------SET FOR DEVELOPMENT OR DEBUGGING---------
+      # ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ 
+      # ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ 
+    entrypoint: ${RUN_COMMAND}
+    working_dir: /home/ue4/workspace
+    hostname: ${AIRSIM_BINARY_CONTAINER}
+    # -------------SET TO ASSIGN NVIDIA GPU------------
+    # ---COMMENT OUT IF YOU DO NOT HAVE A NVIDIA GPU---
+    # ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ 
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    # ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿
+
+# DOCKER COMPOSE UP COMMAND
+# docker compose -f docker-compose.yml --env-file run.env up
