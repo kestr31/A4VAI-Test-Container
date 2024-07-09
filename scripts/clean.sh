@@ -57,7 +57,7 @@ fi
 # RUN PROCESS PER ARGUMENT
 if [ "$1x" == "allx" ]; then
     EchoGreen "[$(basename "$0")] CLEAN ALL ASSETS"
-    git -C ${REPO_DIR} CLEAN --hard
+    git -C ${REPO_DIR} clean --hard
     git -C ${REPO_DIR} clean -fdx
 elif [ "$1x" == "airsimx" ]; then
     EchoGreen "[$(basename "$0")] CLEAN AIRSIM ASSETS"
