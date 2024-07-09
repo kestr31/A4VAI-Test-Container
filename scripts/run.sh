@@ -66,70 +66,45 @@ if [ "$1x" == "airsimx" ]; then
         source ${AIRSIM_DIR}/airsim.env
 
         # CHECK IF AIRSIM DIRECTORY EXISTS
-        if [ ! -d ${AIRSIM_DIR} ]; then
-            EchoRed "[$(basename "$0")] AIRSIM DIRECTORY DOES NOT EXIST. PLEASE CHECK IF THE DIRECTORY EXISTS."
-            exit 1
-        fi
+        CheckDirExists ${AIRSIM_DIR}
 
         # CHECK IF AIRSIM_WORKSPACE EXISTS
-        if [ ! -d ${AIRSIM_WORKSPACE} ]; then
-            EchoRed "[$(basename "$0")] ${AIRSIM_WORKSPACE} DOES NOT EXIST."
-            EchoRed "[$(basename "$0")] PLEASE CHECK airsim.env FILE AGAIN."
-            exit 1
-        fi
+        CheckDirExists ${AIRSIM_WORKSPACE} create
 
         # BACKUP airsim.env TEMPLATE if airsim.env.bak DOES NOT EXIST
-        if [ ! -f ${AIRSIM_DIR}/airsim.env.bak ]; then
-            EchoYellow "[$(basename "$0")] BACKING UP airsim.env TEMPLATE to airsim.env.bak"
-            cp ${AIRSIM_DIR}/airsim.env ${AIRSIM_DIR}/airsim.env.bak
-        else
-            EchoYellow "[$(basename "$0")] airsim.env.bak ALREADY EXISTS. SKIPPING TEMPLATE BACKUP."
-        fi
+        CheckFileExists ${AIRSIM_DIR}/airsim.env.bak cp ${AIRSIM_DIR}/airsim.env
 
         # CHECK IF USING WAYLAND
         if [ -z $WAYLAND_DISPLAY ]; then
             EchoGreen "[$(basename "$0")] WAYLAND DISPLAY NOT SET. SETTING VARIABLE \"DISPLAY\"."
-            sed -i "s/<DISPLAY>/${DISPLAY}/" ${AIRSIM_DIR}/airsim.env
-            sed -i "s/<WAYLAND_DISPLAY>/\"\"/" ${AIRSIM_DIR}/airsim.env
+            sed -i "s/AIRSIM_DISPLAY=\"\"/AIRSIM_DISPLAY=${DISPLAY}/" ${AIRSIM_DIR}/airsim.env
         else
             EchoYellow "[$(basename "$0")] WAYLAND DISPLAY SET. SETTING VARIABLE \"WAYLAND_DISPLAY\"."
             EchoYellow "[$(basename "$0")] IT IS RECOMMENDED TO USE X11 DISPLAY."
-            sed -i "s/<DISPLAY>/\"\"/" ${AIRSIM_DIR}/airsim.env
-            sed -i "s/<WAYLAND_DISPLAY>/${WAYLAND_DISPLAY}/" ${AIRSIM_DIR}/airsim.env
+            sed -i "s/AIRSIM_WAYLAND_DISPLAY=\"\"/AIRSIM_WAYLAND_DISPLAY=${WAYLAND_DISPLAY}/" ${AIRSIM_DIR}/airsim.env
         fi
 
         EchoGreen "[$(basename "$0")] SETTING PULSEAUDIO_DIR AS ${XDG_RUNTIME_DIR}/pulse"
-        sed -i "s~<PULSEAUDIO_DIR>~${XDG_RUNTIME_DIR}/pulse~" ${AIRSIM_DIR}/airsim.env
+        sed -i "s~AIRSIM_PULSEAUDIO_DIR=\"\"~AIRSIM_PULSEAUDIO_DIR=${XDG_RUNTIME_DIR}/pulse~" ${AIRSIM_DIR}/airsim.env
 
         if [ "$2x" == "debugx" ]; then
             EchoGreen "[$(basename "$0")] RUNNING AIRSIM CONTAINER IN DEBUG MODE."
-
-            sed -i "s/<RUN_COMMAND>/\'bash -c \"sleep infinity\"\'/g" ${AIRSIM_DIR}/airsim.env
+            sed -i "s/AIRSIM_RUN_COMMAND=\"\"/AIRSIM_RUN_COMMAND=\'bash -c \"sleep infinity\"\'/g" ${AIRSIM_DIR}/airsim.env
         elif [ "$2x" == "autox" ]; then
             EchoGreen "[$(basename "$0")] RUNNING AIRSIM CONTAINER IN AUTO MODE."
             EchoGreen "[$(basename "$0")] AIRSIM CONTAINER WILL FIND AND RUN .sh FILE IN /home/ue4/workspace/binary DIRECTORY."
 
             cp ${AIRSIM_DIR}/auto.sh ${AIRSIM_WORKSPACE}/auto.sh
-            sed -i "s~<RUN_COMMAND>~\'bash -c \"/home/ue4/workspace/auto.sh\"\'~g" ${AIRSIM_DIR}/airsim.env
+            sed -i "s~AIRSIM_RUN_COMMAND=\"\"~AIRSIM_RUN_COMMAND=\'bash -c \"/home/ue4/workspace/auto.sh\"\'~g" ${AIRSIM_DIR}/airsim.env
         elif [[ "$2x" == *".shx" ]]; then
             EchoGreen "[$(basename "$0")] RUNNING AIRSIM CONTAINER WITH $2"
             EchoGreen "[$(basename "$0")] AIRSIM CONTAINER WILL $2."
 
-            # Check IF $2 exists in AIRSIM_WORKSPACE
-            if [ ! -f ${AIRSIM_DIR}/$2 ]; then
-                EchoRed "[$(basename "$0")] $2 DOES NOT EXIST IN ${AIRSIM_DIR}."
-                exit 1
-            else
-                # CHECK IF $2 IS EXECUTABLE
-                if [ ! -x ${AIRSIM_DIR}/$2 ]; then
-                    EchoRed "[$(basename "$0")] $2 IS NOT EXECUTABLE. KILLING THE SCRIPT."
-                    EchoRed "[$(basename "$0")] PLEASE MAKE SURE $2 IS EXECUTABLE."
-                    exit 1
-                else
-                    cp ${AIRSIM_DIR}/$2 ${AIRSIM_WORKSPACE}/$2
-                    sed -i "s~<RUN_COMMAND>~\'bash -c \"/home/ue4/workspace/$2\"\'~g" ${AIRSIM_DIR}/airsim.env
-                fi
-            fi
+            CheckFileExists ${AIRSIM_DIR}/$2
+            CheckFileExecutable ${AIRSIM_DIR}/$2
+
+            cp ${AIRSIM_DIR}/$2 ${AIRSIM_WORKSPACE}/$2
+            sed -i "s~AIRSIM_RUN_COMMAND=\"\"~AIRSIM_RUN_COMMAND=\'bash -c \"/home/ue4/workspace/$2\"\'~g" ${AIRSIM_DIR}/airsim.env
         fi
 
         EchoGreen "[$(basename "$0")] RUNNING AIRSIM CONTAINER..."
