@@ -11,6 +11,7 @@ REPO_DIR=$(dirname $(dirname $(readlink -f "$0")))
 
 # SOURCE THE ENVIRONMENT AND FUNCTION DEFINITIONS
 source ${BASE_DIR}/include/commonFcn.sh
+source ${BASE_DIR}/include/commonEnv.sh
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -62,53 +63,63 @@ if [ "$1x" == "airsimx" ]; then
         exit 1
     else
         # SET THE AIRSIM DIRECTORY
-        AIRSIM_DIR=${REPO_DIR}/AirSim
-        source ${AIRSIM_DIR}/airsim.env
+        # AIRSIM_DIR=${REPO_DIR}/AirSim
+        # source ${AIRSIM_DIR}/airsim.env
 
-        # CHECK IF AIRSIM DIRECTORY EXISTS
-        CheckDirExists ${AIRSIM_DIR}
+        AIRSIM_SOURCE_DIR=${REPO_DIR}/AirSim
+        AIRSIM_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/AirSim
+        AIRSIM_WORKSPACE=${AIRSIM_DEPLOY_DIR}/workspace
+
+        # CHECK IF AIRSIM SOURCE DIRECTORY EXISTS
+        CheckDirExists ${AIRSIM_SOURCE_DIR}
+
+        # CHECK IF AIRSIM_DEPLOY_DIR EXISTS
+        CheckDirExists ${AIRSIM_DEPLOY_DIR} create
 
         # CHECK IF AIRSIM_WORKSPACE EXISTS
         CheckDirExists ${AIRSIM_WORKSPACE} create
 
         # BACKUP airsim.env TEMPLATE if airsim.env.bak DOES NOT EXIST
-        CheckFileExists ${AIRSIM_DIR}/airsim.env.bak cp ${AIRSIM_DIR}/airsim.env
+        cp ${AIRSIM_SOURCE_DIR}/airsim.env ${AIRSIM_DEPLOY_DIR}/airsim.env
+        cp ${AIRSIM_SOURCE_DIR}/compose.yml ${AIRSIM_DEPLOY_DIR}/compose.yml
 
         # CHECK IF USING WAYLAND
         if [ -z $WAYLAND_DISPLAY ]; then
             EchoGreen "[$(basename "$0")] WAYLAND DISPLAY NOT SET. SETTING VARIABLE \"DISPLAY\"."
-            sed -i "s/AIRSIM_DISPLAY=\"\"/AIRSIM_DISPLAY=${DISPLAY}/" ${AIRSIM_DIR}/airsim.env
+            sed -i "s/AIRSIM_DISPLAY=\"\"/AIRSIM_DISPLAY=${DISPLAY}/" ${AIRSIM_DEPLOY_DIR}/airsim.env
         else
             EchoYellow "[$(basename "$0")] WAYLAND DISPLAY SET. SETTING VARIABLE \"WAYLAND_DISPLAY\"."
             EchoYellow "[$(basename "$0")] IT IS RECOMMENDED TO USE X11 DISPLAY."
-            sed -i "s/AIRSIM_WAYLAND_DISPLAY=\"\"/AIRSIM_WAYLAND_DISPLAY=${WAYLAND_DISPLAY}/" ${AIRSIM_DIR}/airsim.env
+            sed -i "s/AIRSIM_WAYLAND_DISPLAY=\"\"/AIRSIM_WAYLAND_DISPLAY=${WAYLAND_DISPLAY}/" ${AIRSIM_DEPLOY_DIR}/airsim.env
         fi
 
         EchoGreen "[$(basename "$0")] SETTING PULSEAUDIO_DIR AS ${XDG_RUNTIME_DIR}/pulse"
-        sed -i "s~AIRSIM_PULSEAUDIO_DIR=\"\"~AIRSIM_PULSEAUDIO_DIR=${XDG_RUNTIME_DIR}/pulse~" ${AIRSIM_DIR}/airsim.env
+        sed -i "s~AIRSIM_PULSEAUDIO_DIR=\"\"~AIRSIM_PULSEAUDIO_DIR=${XDG_RUNTIME_DIR}/pulse~" ${AIRSIM_DEPLOY_DIR}/airsim.env
+
+        EchoGreen "[$(basename "$0")] SETTING AIRSIM_DEPLOY_DIR AS ${AIRSIM_WORKSPACE}"
+        sed -i "s~AIRSIM_WORKSPACE=\"\"~AIRSIM_WORKSPACE=${AIRSIM_WORKSPACE}~" ${AIRSIM_DEPLOY_DIR}/airsim.env
 
         if [ "$2x" == "debugx" ]; then
             EchoGreen "[$(basename "$0")] RUNNING AIRSIM CONTAINER IN DEBUG MODE."
-            sed -i "s/AIRSIM_RUN_COMMAND=\"\"/AIRSIM_RUN_COMMAND=\'bash -c \"sleep infinity\"\'/g" ${AIRSIM_DIR}/airsim.env
+            sed -i "s/AIRSIM_RUN_COMMAND=\"\"/AIRSIM_RUN_COMMAND=\'bash -c \"sleep infinity\"\'/g" ${AIRSIM_DEPLOY_DIR}/airsim.env
         elif [ "$2x" == "autox" ]; then
             EchoGreen "[$(basename "$0")] RUNNING AIRSIM CONTAINER IN AUTO MODE."
             EchoGreen "[$(basename "$0")] AIRSIM CONTAINER WILL FIND AND RUN .sh FILE IN /home/ue4/workspace/binary DIRECTORY."
 
-            cp ${AIRSIM_DIR}/auto.sh ${AIRSIM_WORKSPACE}/auto.sh
-            sed -i "s~AIRSIM_RUN_COMMAND=\"\"~AIRSIM_RUN_COMMAND=\'bash -c \"/home/ue4/workspace/auto.sh\"\'~g" ${AIRSIM_DIR}/airsim.env
+            cp ${AIRSIM_SOURCE_DIR}/auto.sh ${AIRSIM_WORKSPACE}/auto.sh
+            sed -i "s~AIRSIM_RUN_COMMAND=\"\"~AIRSIM_RUN_COMMAND=\'bash -c \"/home/ue4/workspace/auto.sh\"\'~g" ${AIRSIM_DEPLOY_DIR}/airsim.env
         elif [[ "$2x" == *".shx" ]]; then
             EchoGreen "[$(basename "$0")] RUNNING AIRSIM CONTAINER WITH $2"
             EchoGreen "[$(basename "$0")] AIRSIM CONTAINER WILL $2."
 
-            CheckFileExists ${AIRSIM_DIR}/$2
-            CheckFileExecutable ${AIRSIM_DIR}/$2
+            CheckFileExists ${AIRSIM_DEPLOY_DIR}/$2
+            CheckFileExecutable ${AIRSIM_DEPLOY_DIR}/$2
 
-            cp ${AIRSIM_DIR}/$2 ${AIRSIM_WORKSPACE}/$2
-            sed -i "s~AIRSIM_RUN_COMMAND=\"\"~AIRSIM_RUN_COMMAND=\'bash -c \"/home/ue4/workspace/$2\"\'~g" ${AIRSIM_DIR}/airsim.env
+            sed -i "s~AIRSIM_RUN_COMMAND=\"\"~AIRSIM_RUN_COMMAND=\'bash -c \"/home/ue4/workspace/$2\"\'~g" ${AIRSIM_DEPLOY_DIR}/airsim.env
         fi
 
         EchoGreen "[$(basename "$0")] RUNNING AIRSIM CONTAINER..."
-        docker compose -f ${AIRSIM_DIR}/compose.yml --env-file ${AIRSIM_DIR}/airsim.env up
+        docker compose -f ${AIRSIM_DEPLOY_DIR}/compose.yml --env-file ${AIRSIM_DEPLOY_DIR}/airsim.env up
     fi
 elif [ "$1x" == "px4x" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET."

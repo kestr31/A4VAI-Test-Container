@@ -6,11 +6,12 @@
 # >>>----------------------------------------------------
 
 # SET THE BASE DIRECTORY
-BASE_DIR=$(dirname "$0")
-REPO_DIR=$(dirname "${BASEDIR}")
+BASE_DIR=$(dirname $(readlink -f "$0"))
+REPO_DIR=$(dirname $(dirname $(readlink -f "$0")))
 
 # SOURCE THE ENVIRONMENT AND FUNCTION DEFINITIONS
 source ${BASE_DIR}/include/commonFcn.sh
+source ${BASE_DIR}/include/commonEnv.sh
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -47,15 +48,33 @@ fi
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
 
+# COMMON STATEMENTS
+# >>>----------------------------------------------------
+
+AIRSIM_WORKSPACE=${UNIT_TEST_WORKSPACE}/AirSim
+PX4_WORKSPACE=${UNIT_TEST_WORKSPACE}/PX4
+ROS2_WORKSPACE=${UNIT_TEST_WORKSPACE}/ROS2
+GAZEBO_CLASSIC_WORKSPACE=${UNIT_TEST_WORKSPACE}/Gazebo-Classic
+GAZEBO_WORKSPACE=${UNIT_TEST_WORKSPACE}/Gazebo
+
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 
 # RUN PROCESS PER ARGUMENT
 if [ "$1x" == "allx" ]; then
     EchoGreen "[$(basename "$0")] STOP ALL TEST CONTAINERS"
+    
     EchoGreen "[$(basename "$0")] STOPPING AIRSIM CONTAINER..."
-    docker compose -f ${REPO_DIR}/AirSim/compose.yml --env-file ${REPO_DIR}/AirSim/airsim.env down
+    CheckFileExists ${AIRSIM_WORKSPACE}/compose.yml
+    CheckFileExists ${AIRSIM_WORKSPACE}/airsim.env
+    docker compose -f ${AIRSIM_WORKSPACE}/compose.yml --env-file ${AIRSIM_WORKSPACE}/airsim.env down
 elif [ "$1x" == "airsimx" ]; then
     EchoGreen "[$(basename "$0")] STOP AIRSIM CONTAINER"
-    docker compose -f ${REPO_DIR}/AirSim/compose.yml --env-file ${REPO_DIR}/AirSim/airsim.env down
+
+    EchoGreen "[$(basename "$0")] STOPPING AIRSIM CONTAINER..."
+    CheckFileExists ${AIRSIM_WORKSPACE}/compose.yml
+    CheckFileExists ${AIRSIM_WORKSPACE}/airsim.env
+    docker compose -f ${AIRSIM_WORKSPACE}/compose.yml --env-file ${AIRSIM_WORKSPACE}/airsim.env down
 elif [ "$1x" == "px4x" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
 elif [ "$1x" == "ros2x" ]; then

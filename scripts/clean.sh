@@ -6,8 +6,8 @@
 # >>>----------------------------------------------------
 
 # SET THE BASE DIRECTORY
-BASE_DIR=$(dirname "$0")
-REPO_DIR=$(dirname "${BASEDIR}")
+BASE_DIR=$(dirname $(readlink -f "$0"))
+REPO_DIR=$(dirname $(dirname $(readlink -f "$0")))
 
 # SOURCE THE ENVIRONMENT AND FUNCTION DEFINITIONS
 source ${BASE_DIR}/include/commonFcn.sh
