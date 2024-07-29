@@ -1,5 +1,5 @@
 services:
-  px4-env:
+  gz-sim:
     image: ${GAZEBO_CLASSIC_ENV_IMAGE}
     container_name: ${GAZEBO_CLASSIC_ENV_CONTAINER}
     environment:
@@ -19,7 +19,7 @@ services:
     # --UNCOMMENT TO ENABLE AMD/INTEL GPU ACCELERATION---
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
     devices:
-      - /dev/dri/card0
+      - /dev/dri/card1
     privileged: true
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # ----UNCOMMENT TO ENABLE NVIDIA GPU ACCELERATION----
