@@ -72,6 +72,11 @@ if [ "$1x" == "allx" ]; then
     CheckFileExists ${PX4_DEPLOY_DIR}/run.env
     docker compose -f ${PX4_DEPLOY_DIR}/compose.yml --env-file ${PX4_DEPLOY_DIR}/run.env down
 
+    EchoYellow "[$(basename "$0")] STOPPING ROS2 CONTAINER..."
+    CheckFileExists ${ROS2_DEPLOY_DIR}/compose.yml
+    CheckFileExists ${ROS2_DEPLOY_DIR}/run.env
+    docker compose -f ${ROS2_DEPLOY_DIR}/compose.yml --env-file ${ROS2_DEPLOY_DIR}/run.env down
+
     EchoYellow "[$(basename "$0")] STOPPING GAZEBO-CLASSIC CONTAINER..."
     CheckFileExists ${GAZEBO_CLASSIC_DEPLOY_DIR}/compose.yml
     CheckFileExists ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env
@@ -87,8 +92,10 @@ elif [ "$1x" == "px4x" ]; then
     CheckFileExists ${PX4_DEPLOY_DIR}/run.env
     docker compose -f ${PX4_DEPLOY_DIR}/compose.yml --env-file ${PX4_DEPLOY_DIR}/run.env down
 elif [ "$1x" == "ros2x" ]; then
-    EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
-    exit 1
+    EchoYellow "[$(basename "$0")] STOPPING ROS2 CONTAINER..."
+    CheckFileExists ${ROS2_DEPLOY_DIR}/compose.yml
+    CheckFileExists ${ROS2_DEPLOY_DIR}/run.env
+    docker compose -f ${ROS2_DEPLOY_DIR}/compose.yml --env-file ${ROS2_DEPLOY_DIR}/run.env down
 elif [ "$1x" == "gazebo-classicx" ]; then
     EchoYellow "[$(basename "$0")] STOPPING GAZEBO-CLASSIC CONTAINER..."
     CheckFileExists ${GAZEBO_CLASSIC_DEPLOY_DIR}/compose.yml

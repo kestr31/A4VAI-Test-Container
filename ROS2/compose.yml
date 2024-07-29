@@ -1,0 +1,39 @@
+services:
+  ros2-env:
+    image: ${ROS2_ENV_IMAGE}
+    container_name: ${ROS2_ENV_CONTAINER}
+    environment:
+      # -----------STATIC VALUE DO NOT MODIFY------------
+      DISPLAY:                    ${ROS2_DISPLAY}
+      WAYLAND_DISPLAY:            ${ROS2_WAYLAND_DISPLAY}
+      XDG_RUNTIME_DIR:            ${XDG_RUNTIME_DIR}
+      # -------------------------------------------------
+    volumes:
+      # -----------STATIC VALUE DO NOT MODIFY------------
+      - ${ROS2_X11_SOCKET_DIR}:${ROS2_X11_SOCKET_DIR}
+      - ${ROS2_PULSEAUDIO_DIR}:/run/user/1000/pulse
+      - ${ROS2_WORKSPACE}:/home/user/workspace
+      # --------SET FOR DEVELOPMENT OR DEBUGGING---------
+      # ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ 
+      # ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ 
+    # --UNCOMMENT TO ENABLE AMD/INTEL GPU ACCELERATION---
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    devices:
+      - /dev/dri/card0
+    privileged: true
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # ----UNCOMMENT TO ENABLE NVIDIA GPU ACCELERATION----
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    entrypoint: ${ROS2_RUN_COMMAND}
+    working_dir: /home/user/workspace
+
+# DOCKER COMPOSE UP COMMAND
+# docker compose -f docker-compose.yml --env-file run.env up
