@@ -82,7 +82,7 @@ if [ "$1x" == "airsimx" ]; then
         # SET DISPLAY AND AUDIO-RELATED ENVIRONMENT VARIABLES TO THE .env FILE
         SetComposeDisplay ${AIRSIM_DEPLOY_DIR}/run.env
 
-        EchoGreen "[$(basename "$0")] SETTING AIRSIM_DEPLOY_DIR AS ${AIRSIM_WORKSPACE}"
+        EchoGreen "[$(basename "$0")] SETTING AIRSIM_WORKSPACE AS ${AIRSIM_WORKSPACE}"
         sed -i "s~AIRSIM_WORKSPACE=\"\"~AIRSIM_WORKSPACE=${AIRSIM_WORKSPACE}~" ${AIRSIM_DEPLOY_DIR}/run.env
 
         if [ "$2x" == "debugx" ]; then
@@ -139,7 +139,7 @@ elif [ "$1x" == "px4x" ]; then
         # SET DISPLAY AND AUDIO-RELATED ENVIRONMENT VARIABLES TO THE .env FILE
         SetComposeDisplay ${PX4_DEPLOY_DIR}/run.env
 
-        EchoGreen "[$(basename "$0")] SETTING PX4_DEPLOY_DIR AS ${PX4_WORKSPACE}"
+        EchoGreen "[$(basename "$0")] SETTING PX4_WORKSPACE AS ${PX4_WORKSPACE}"
         sed -i "s~PX4_WORKSPACE=\"\"~PX4_WORKSPACE=${PX4_WORKSPACE}~" ${PX4_DEPLOY_DIR}/run.env
 
         if [ "$2x" == "debugx" ]; then
@@ -154,8 +154,48 @@ elif [ "$1x" == "ros2x" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET."
     exit 1
 elif [ "$1x" == "gazebo-classicx" ]; then
-    EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET."
-    exit 1
+    usageState2(){
+        EchoRed "Usage: $0 gazebo-classic [rdebug]"
+        EchoRed "debug: RUN GAZEBO-CLASSIC CONTAINER IN DEBUG MODE (sleep infinity)"
+        exit 1
+    }
+
+    # also check if input is in *.sh format
+    if [ "$2x" != "debugx" ]; then
+        usageState2 $0
+        exit 1
+    else
+        GAZEBO_CLASSIC_SOURCE_DIR=${REPO_DIR}/Gazebo-Classic
+        GAZEBO_CLASSIC_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/Gazebo-Classic
+        GAZEBO_CLASSIC_WORKSPACE=${GAZEBO_CLASSIC_DEPLOY_DIR}/workspace
+
+        # CHECK IF PX4_SOURCE_DIR EXISTS
+        CheckDirExists ${GAZEBO_CLASSIC_SOURCE_DIR}
+
+        # CHECK IF PX4_DEPLOY_DIR EXISTS
+        CheckDirExists ${GAZEBO_CLASSIC_DEPLOY_DIR} create
+
+        # CHECK IF PX4_WORKSPACE EXISTS
+        CheckDirExists ${GAZEBO_CLASSIC_WORKSPACE} create
+
+        # COPY ENVIRONMENT VARTIABLE SETTINGS AND COMPOSE SETTINGS TEMPLATE
+        cp ${GAZEBO_CLASSIC_SOURCE_DIR}/run.env ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env
+        cp ${GAZEBO_CLASSIC_SOURCE_DIR}/compose.yml ${GAZEBO_CLASSIC_DEPLOY_DIR}/compose.yml
+
+        # SET DISPLAY AND AUDIO-RELATED ENVIRONMENT VARIABLES TO THE .env FILE
+        SetComposeDisplay ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env
+
+        EchoGreen "[$(basename "$0")] SETTING GAZEBO-CLASSIC_WORKSPACE AS ${GAZEBO_CLASSIC_WORKSPACE}"
+        sed -i "s~GAZEBO_CLASSIC_WORKSPACE=\"\"~GAZEBO_CLASSIC_WORKSPACE=${GAZEBO_CLASSIC_WORKSPACE}~" ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env
+
+        if [ "$2x" == "debugx" ]; then
+            EchoGreen "[$(basename "$0")] RUNNING GAZEBO-CLASSIC CONTAINER IN DEBUG MODE."
+            sed -i "s/GAZEBO_CLASSIC_RUN_COMMAND=\"\"/GAZEBO_CLASSIC_RUN_COMMAND=\'bash -c \"sleep infinity\"\'/g" ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env
+        fi
+
+        EchoGreen "[$(basename "$0")] RUNNING GAZEBO-CLASSIC CONTAINER..."
+        docker compose -f ${GAZEBO_CLASSIC_DEPLOY_DIR}/compose.yml --env-file ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env up
+    fi
 elif [ "$1x" == "gazebox" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET."
     exit 1

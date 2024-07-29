@@ -51,11 +51,11 @@ fi
 # COMMON STATEMENTS
 # >>>----------------------------------------------------
 
-AIRSIM_WORKSPACE=${UNIT_TEST_WORKSPACE}/AirSim
-PX4_WORKSPACE=${UNIT_TEST_WORKSPACE}/PX4-Autopilot
-ROS2_WORKSPACE=${UNIT_TEST_WORKSPACE}/ROS2
-GAZEBO_CLASSIC_WORKSPACE=${UNIT_TEST_WORKSPACE}/Gazebo-Classic
-GAZEBO_WORKSPACE=${UNIT_TEST_WORKSPACE}/Gazebo
+AIRSIM_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/AirSim
+PX4_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/PX4-Autopilot
+ROS2_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/ROS2
+GAZEBO_CLASSIC_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/Gazebo-Classic
+GAZEBO_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/Gazebo
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -63,30 +63,37 @@ GAZEBO_WORKSPACE=${UNIT_TEST_WORKSPACE}/Gazebo
 # RUN PROCESS PER ARGUMENT
 if [ "$1x" == "allx" ]; then
     EchoYellow "[$(basename "$0")] STOPPING AIRSIM CONTAINER..."
-    CheckFileExists ${AIRSIM_WORKSPACE}/compose.yml
-    CheckFileExists ${AIRSIM_WORKSPACE}/run.env
-    docker compose -f ${AIRSIM_WORKSPACE}/compose.yml --env-file ${AIRSIM_WORKSPACE}/run.env down
+    CheckFileExists ${AIRSIM_DEPLOY_DIR}/compose.yml
+    CheckFileExists ${AIRSIM_DEPLOY_DIR}/run.env
+    docker compose -f ${AIRSIM_DEPLOY_DIR}/compose.yml --env-file ${AIRSIM_DEPLOY_DIR}/run.env down
 
     EchoYellow "[$(basename "$0")] STOPPING PX4-AUTOPILOT CONTAINER..."
-    CheckFileExists ${PX4_WORKSPACE}/compose.yml
-    CheckFileExists ${PX4_WORKSPACE}/run.env
-    docker compose -f ${PX4_WORKSPACE}/compose.yml --env-file ${PX4_WORKSPACE}/run.env down
+    CheckFileExists ${PX4_DEPLOY_DIR}/compose.yml
+    CheckFileExists ${PX4_DEPLOY_DIR}/run.env
+    docker compose -f ${PX4_DEPLOY_DIR}/compose.yml --env-file ${PX4_DEPLOY_DIR}/run.env down
+
+    EchoYellow "[$(basename "$0")] STOPPING GAZEBO-CLASSIC CONTAINER..."
+    CheckFileExists ${GAZEBO_CLASSIC_DEPLOY_DIR}/compose.yml
+    CheckFileExists ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env
+    docker compose -f ${GAZEBO_CLASSIC_DEPLOY_DIR}/compose.yml --env-file ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env down
 elif [ "$1x" == "airsimx" ]; then
     EchoYellow "[$(basename "$0")] STOPPING AIRSIM CONTAINER..."
-    CheckFileExists ${AIRSIM_WORKSPACE}/compose.yml
-    CheckFileExists ${AIRSIM_WORKSPACE}/run.env
-    docker compose -f ${AIRSIM_WORKSPACE}/compose.yml --env-file ${AIRSIM_WORKSPACE}/run.env down
+    CheckFileExists ${AIRSIM_DEPLOY_DIR}/compose.yml
+    CheckFileExists ${AIRSIM_DEPLOY_DIR}/run.env
+    docker compose -f ${AIRSIM_DEPLOY_DIR}/compose.yml --env-file ${AIRSIM_DEPLOY_DIR}/run.env down
 elif [ "$1x" == "px4x" ]; then
     EchoYellow "[$(basename "$0")] STOPPING PX4-AUTOPILOT CONTAINER..."
-    CheckFileExists ${PX4_WORKSPACE}/compose.yml
-    CheckFileExists ${PX4_WORKSPACE}/run.env
-    docker compose -f ${PX4_WORKSPACE}/compose.yml --env-file ${PX4_WORKSPACE}/run.env down
+    CheckFileExists ${PX4_DEPLOY_DIR}/compose.yml
+    CheckFileExists ${PX4_DEPLOY_DIR}/run.env
+    docker compose -f ${PX4_DEPLOY_DIR}/compose.yml --env-file ${PX4_DEPLOY_DIR}/run.env down
 elif [ "$1x" == "ros2x" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
     exit 1
 elif [ "$1x" == "gazebo-classicx" ]; then
-    EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
-    exit 1
+    EchoYellow "[$(basename "$0")] STOPPING GAZEBO-CLASSIC CONTAINER..."
+    CheckFileExists ${GAZEBO_CLASSIC_DEPLOY_DIR}/compose.yml
+    CheckFileExists ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env
+    docker compose -f ${GAZEBO_CLASSIC_DEPLOY_DIR}/compose.yml --env-file ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env down
 elif [ "$1x" == "gazebox" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
     exit 1

@@ -26,6 +26,7 @@ usageState1(){
     EchoRed "ros2: RESET ROS2 ASSETS"
     EchoRed "gazebo-classic: RESET GAZEBO CLASSIC ASSETS"
     EchoRed "gazebo: RESET GAZEBO ASSETS"
+    EchoRed "scripts: RESET SCRIPTS"
     exit 1
 }
 
@@ -38,8 +39,14 @@ usageState1(){
 if [ $# -eq 0 ]; then
     usageState1 $0
 else
-    if [ "$1x" != "allx" ] && [ "$1x" != "airsimx" ] && [ "$1x" != "px4x" ] && [ "$1x" != "ros2x" ] && [ "$1x" != "gazebo-classicx" ] && [ "$1x" != "gazebox" ]; then
-        EchoRed "[$(basename "$0")] INVALID INPUT. PLEASE USE ARGUMENT AMONG \"airsim\", \"px4\", \"ros2\", \"gazebo-classic\", \"gazebo\"."
+    if [ "$1x" != "allx" ] && \
+       [ "$1x" != "airsimx" ] && \
+       [ "$1x" != "px4x" ] && \
+       [ "$1x" != "ros2x" ] && \
+       [ "$1x" != "gazebo-classicx" ] && \
+       [ "$1x" != "gazebox" ] && \
+       [ "$1x" != "scriptsx" ]; then
+        EchoRed "[$(basename "$0")] INVALID INPUT. PLEASE USE ARGUMENT AMONG \"airsim\", \"px4\", \"ros2\", \"gazebo-classic\", \"gazebo\" and \"scripts\"."
         exit 1
     fi
 fi
@@ -56,17 +63,24 @@ fi
 
 # RUN PROCESS PER ARGUMENT
 if [ "$1x" == "allx" ]; then
-    EchoGreen "[$(basename "$0")] RESET ALL ASSETS"
+    EchoGreen "[$(basename "$0")] RESET ALL SOURCE FILES"
     git -C ${REPO_DIR} reset --hard
 elif [ "$1x" == "airsimx" ]; then
-    EchoGreen "[$(basename "$0")] RESET AIRSIM ASSETS"
+    EchoGreen "[$(basename "$0")] RESET AIRSIM SOURCE FILES"
     git -C ${REPO_DIR} checkout -- AirSim
 elif [ "$1x" == "px4x" ]; then
-    EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
+    EchoGreen "[$(basename "$0")] RESET PX4-AUTOPILOT SOURCE FILES"
+    git -C ${REPO_DIR} checkout -- PX4-Autopilot
 elif [ "$1x" == "ros2x" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
+    exit 1
 elif [ "$1x" == "gazebo-classicx" ]; then
-    EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
+    EchoGreen "[$(basename "$0")] RESET GAZEBO-CLASSIC SOURCE FILES"
+    git -C ${REPO_DIR} checkout -- Gazebo-Classic
 elif [ "$1x" == "gazebox" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
+    exit 1
+elif [ "$1x" == "scriptsx" ]; then
+    EchoGreen "[$(basename "$0")] RESET SCRIPTS"
+    git -C ${REPO_DIR} checkout -- scripts
 fi
