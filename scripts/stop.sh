@@ -39,8 +39,20 @@ usageState1(){
 if [ $# -eq 0 ]; then
     usageState1 $0
 else
-    if [ "$1x" != "allx" ] && [ "$1x" != "airsimx" ] && [ "$1x" != "px4x" ] && [ "$1x" != "ros2x" ] && [ "$1x" != "gazebo-classicx" ] && [ "$1x" != "gazebox" ]; then
-        EchoRed "[$(basename "$0")] INVALID INPUT. PLEASE USE ARGUMENT AMONG \"airsim\", \"px4\", \"ros2\", \"gazebo-classic\", \"gazebo\"."
+    if [ "$1x" != "allx" ] && \
+       [ "$1x" != "airsimx" ] && \
+       [ "$1x" != "px4x" ] && \
+       [ "$1x" != "ros2x" ] && \
+       [ "$1x" != "gazebo-classicx" ] && \
+       [ "$1x" != "gazebox" ] && \
+       [ "$1x" != "qgcx" ]; then
+        EchoRed "[$(basename "$0")] INVALID INPUT. PLEASE USE ARGUMENT AMONG
+        \"airsim\"
+        \"px4\"
+        \"ros2\"
+        \"gazebo-classic\"
+        \"gazebo\"
+        \"qgc\"."
         exit 1
     fi
 fi
@@ -56,6 +68,7 @@ PX4_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/PX4-Autopilot
 ROS2_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/ROS2
 GAZEBO_CLASSIC_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/Gazebo-Classic
 GAZEBO_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/Gazebo
+QGC_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/QGroundControl
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
 
@@ -81,6 +94,12 @@ if [ "$1x" == "allx" ]; then
     CheckFileExists ${GAZEBO_CLASSIC_DEPLOY_DIR}/compose.yml
     CheckFileExists ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env
     docker compose -f ${GAZEBO_CLASSIC_DEPLOY_DIR}/compose.yml --env-file ${GAZEBO_CLASSIC_DEPLOY_DIR}/run.env down
+
+
+    EchoYellow "[$(basename "$0")] STOPPING QGroundControl CONTAINER..."
+    CheckFileExists ${QGC_DEPLOY_DIR}/compose.yml
+    CheckFileExists ${QGC_DEPLOY_DIR}/run.env
+    docker compose -f ${QGC_DEPLOY_DIR}/compose.yml --env-file ${QGC_DEPLOY_DIR}/run.env down
 elif [ "$1x" == "airsimx" ]; then
     EchoYellow "[$(basename "$0")] STOPPING AIRSIM CONTAINER..."
     CheckFileExists ${AIRSIM_DEPLOY_DIR}/compose.yml
@@ -104,4 +123,9 @@ elif [ "$1x" == "gazebo-classicx" ]; then
 elif [ "$1x" == "gazebox" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
     exit 1
+elif [ "$1x" == "qgcx" ]; then
+    EchoYellow "[$(basename "$0")] STOPPING QGroundControl CONTAINER..."
+    CheckFileExists ${QGC_DEPLOY_DIR}/compose.yml
+    CheckFileExists ${QGC_DEPLOY_DIR}/run.env
+    docker compose -f ${QGC_DEPLOY_DIR}/compose.yml --env-file ${QGC_DEPLOY_DIR}/run.env down
 fi

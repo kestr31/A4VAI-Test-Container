@@ -19,14 +19,15 @@ source ${BASE_DIR}/include/commonEnv.sh
 # DEFINE USAGE FUNCTION
 # >>>----------------------------------------------------
 
-# FIRST ARGUMENTS: airsim, px4, ros2, gazebo-classic, gazebo
+# FIRST ARGUMENTS: airsim, px4, ros2, gazebo-classic, gazebo, qgc
 usageState1(){
-    EchoRed "Usage: $0 [airsim|px4|ros2|gazebo-classic|gazebo]"
+    EchoRed "Usage: $0 [airsim|px4|ros2|gazebo-classic|gazebo|qgc]"
     EchoRed "airsim: RUN AIRSIM CONTAINER"
     EchoRed "px4: RUN PX4 CONTAINER"
     EchoRed "ros2: RUN ROS2 CONTAINER"
     EchoRed "gazebo-classic: RUN GAZEBO CLASSIC CONTAINER"
     EchoRed "gazebo: RUN GAZEBO CONTAINER"
+    EchoRed "qgc: RUN QGroundControl CONTAINER"
     exit 1
 }
 
@@ -36,7 +37,7 @@ usageState1(){
 # CHECK IF ANY INPUT ARGUMENTS ARE PROVIDED
 # >>>----------------------------------------------------
 
-# FIRST ARGUMENTS CHECK: airsim, px4, ros2, gazebo-classic, gazebo
+# FIRST ARGUMENTS CHECK: airsim, px4, ros2, gazebo-classic, gazebo, qgc
 if [ $# -eq 0 ]; then
     usageState1 $0
 else
@@ -44,13 +45,15 @@ else
        [ "$1x" != "px4x" ] && \
        [ "$1x" != "ros2x" ] && \
        [ "$1x" != "gazebo-classicx" ] && \
-       [ "$1x" != "gazebox" ]; then
+       [ "$1x" != "gazebox" ] && \
+       [ "$1x" != "qgcx" ]; then
         EchoRed "[$(basename "$0")] INVALID INPUT \"$1\". PLEASE USE ARGUMENT AMONG
         \"airsim\"
         \"px4\"
         \"ros2\"
         \"gazebo-classic\"
-        \"gazebo\""
+        \"gazebo\"
+        \"qgc\""
         exit 1
     fi
 fi
@@ -357,6 +360,71 @@ elif [ "$1x" == "gazebo-classicx" ]; then
 elif [ "$1x" == "gazebox" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET."
     exit 1
+elif [ "$1x" == "qgcx" ]; then
+    # SECOND ARGUMENTS: debug, stop, run
+    usageState2(){
+        EchoRed "INVALID INPUT \"$1\". PLEASE USE ARGUMENT AS FOLLOWING:"
+        EchoRed "Usage: $0 qgc [debug|stop|run]"
+        EchoRed "debug: RUN QGroundControl CONTAINER IN DEBUG MODE (sleep infinity)"
+        EchoRed "stop: STOP QGroundControl CONTAINER IF IT IS RUNNING"
+        EchoRed "run: RUN QGroundControl CONTAINER IN NORMAL MODE"
+        exit 1
+    }
+
+    # SECOND ARGUMENT CHECK: debug, stop
+    if [ "$2x" != "debugx" ] && \
+       [ "$2x" != "stopx" ] && \
+       [ "$2x" != "runx" ]; then
+        usageState2 $2
+        exit 1
+    else
+        # ACTION: stop. STOP THE CONTAINER
+        if [ "$2x" == "stopx" ]; then
+            EchoYellow "[$(basename "$0")] THIS FEATURE IS FOR CONVENIENCE."
+            EchoYellow "[$(basename "$0")] IT IS RECOMMENDED TO USE stop.sh SCRIPT TO STOP THE CONTAINER."
+            ${BASE_DIR}/stop.sh qgc
+        # ACTIONS: debug
+        else
+            # SET BASIC ENVIRONMENT VARIABLES
+            QGC_SOURCE_DIR=${REPO_DIR}/QGroundControl
+            QGC_DEPLOY_DIR=${UNIT_TEST_WORKSPACE}/QGroundControl
+            QGC_WORKSPACE=${QGC_DEPLOY_DIR}/workspace
+
+            # CHECK IF PX4_SOURCE_DIR EXISTS
+            CheckDirExists ${QGC_SOURCE_DIR}
+
+            # CHECK IF PX4_DEPLOY_DIR EXISTS
+            CheckDirExists ${QGC_DEPLOY_DIR} create
+
+            # CHECK IF PX4_WORKSPACE EXISTS
+            CheckDirExists ${QGC_WORKSPACE} create
+
+            # COPY ENVIRONMENT VARTIABLE SETTINGS AND COMPOSE SETTINGS TEMPLATE
+            cp ${QGC_SOURCE_DIR}/run.env ${QGC_DEPLOY_DIR}/run.env
+            cp ${QGC_SOURCE_DIR}/compose.yml ${QGC_DEPLOY_DIR}/compose.yml
+
+            # SET DISPLAY AND AUDIO-RELATED ENVIRONMENT VARIABLES TO THE .env FILE
+            SetComposeDisplay ${QGC_DEPLOY_DIR}/run.env
+
+            # SET QGC_WORKSPACE TO THE .env FILE
+            EchoGreen "[$(basename "$0")] SETTING QGC_WORKSPACE AS ${QGC_WORKSPACE}"
+            sed -i "s~QGC_WORKSPACE=\"\"~QGC_WORKSPACE=${QGC_WORKSPACE}~" ${QGC_DEPLOY_DIR}/run.env
+
+            # ACTION: debug. RUN THE CONTAINER IN DEBUG MODE (sleep infinity)
+            if [ "$2x" == "debugx" ]; then
+                EchoGreen "[$(basename "$0")] RUNNING QGroundControl CONTAINER IN DEBUG MODE."
+                sed -i "s/QGC_RUN_COMMAND=\"\"/QGC_RUN_COMMAND=\'bash -c \"sleep infinity\"\'/g" ${QGC_DEPLOY_DIR}/run.env
+            elif [ "$2x" == "runx" ]; then
+                EchoGreen "[$(basename "$0")] RUNNING QGroundControl CONTAINER IN NORMAL MODE."
+                sed -i "s~QGC_RUN_COMMAND=\"\"~QGC_RUN_COMMAND=\'bash -c \"/usr/local/bin/entrypoint.sh\"\'~g" ${QGC_DEPLOY_DIR}/run.env
+            fi
+
+            # DEPLOY THE CONTAINER
+            EchoGreen "[$(basename "$0")] RUNNING QGroundControl CONTAINER..."
+            docker compose -f ${QGC_DEPLOY_DIR}/compose.yml --env-file ${QGC_DEPLOY_DIR}/run.env up
+        fi
+    fi
+
 fi
 
 # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
