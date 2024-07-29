@@ -225,6 +225,10 @@ CheckFileExists(){
 
 # FUNCTION TO CHECK IF THE FILE IS EXECUTABLE
 # >>>-------------------------------------------------------------
+# INPUTS:
+# $1: FILE TO CHECK
+# $2: MAKE FILE EXECUTABLE (optional)
+# ----------------------------------------------------------------
 CheckFileExecutable(){
     usage(){
         EchoRed "Usage: $0 [file] (x)"
@@ -264,3 +268,62 @@ CheckFileExecutable(){
         fi
     fi
 }
+
+
+# FUNCTION TO SET DISPLAY-RELATED COMPOSE ENVIRONMENT VARIABLES
+# >>>-------------------------------------------------------------
+# INPUTS:
+# $1: FILE TO MODIFY
+# ----------------------------------------------------------------
+SetComposeDisplay(){
+    usage(){
+        EchoRed "Usage: $0 [file]"
+        EchoBoxLine
+        exit 1
+    }
+
+    if [ $# -eq 0 ]; then
+        EchoRed "[$(basename "$0")] NO ARGUMENT PROVIDED."
+        usageState1 $0
+    fi
+
+    # CHECK IF THE FILE EXISTS
+    CheckFileExists $1
+
+    # READ LINE TO BE CHANGED FIRST
+    DISPLAY_LINE=$(grep -E '_DISPLAY=""' $1 | grep -v "WAYLAND_DISPLAY")
+    WAYLAND_DISPLAY_LINE=$(grep '_WAYLAND_DISPLAY=""' $1)
+    PULSEAUDIO_LINE=$(grep '_PULSEAUDIO_DIR=""' $1)
+
+    if [ -z "${DISPLAY_LINE}" ]; then
+        EchoRed "[$(basename "$0")] *_DISPLAY LINE DOES NOT EXIST."
+    elif [ -z "${WAYLAND_DISPLAY_LINE}" ]; then
+        EchoRed "[$(basename "$0")] *_WAYLAND_DISPLAY DOES NOT EXIST."
+    elif [ -z "${PULSEAUDIO_LINE}" ]; then
+        EchoRed "[$(basename "$0")] *_PULSEAUDIO_DIR DOES NOT EXIST."
+    fi
+
+    # SET DISPLAY OR WAYLAND_DISPLAY. IF NO DISPLAY, KILL THE SCRIPT.
+    # CASE 1: DISPLAY IS SET (X11)
+    if [ ! -z "${DISPLAY}" ]; then
+        EchoGreen "[$(basename "$0")] \$\{DISPLAY\} IS SET."
+        EchoGreen "[$(basename "$0")] SETTING VARIABLE \"DISPLAY\" AS \"${DISPLAY}\"."
+        sed -i "s~${DISPLAY_LINE}~$(echo ${DISPLAY_LINE} | sed "s~\"\"~\"${DISPLAY}\"~g")~g" $1
+    # CASE 2: WAYLAND_DISPLAY IS SET (WAYLAND)
+    elif [ ! -z "${WAYLAND_DISPLAY}" ]; then
+        EchoYellow "[$(basename "$0")] \$\{WAYLAND_DISPLAY\} IS SET."
+        EchoYellow "[$(basename "$0")] IT IS RECOMMENDED TO USE X11 DISPLAY."
+        EchoYellow "[$(basename "$0")] SETTING VARIABLE \"WAYLAND_DISPLAY\" AS \"${WAYLAND_DISPLAY}\"."
+        sed -i "s~${WAYLAND_DISPLAY_LINE}~$(echo ${WAYLAND_DISPLAY_LINE} | sed "s~\"\"~\"${WAYLAND_DISPLAY}\"~g")~g" $1
+    # CASE3: NO ANY DISPLAY IS SET (NON-GRAPHICAL)
+    else
+        EchoRed "[$(basename "$0")] ANY DISPLAY IS NOT SET."
+        EchoRed "[$(basename "$0")] ARE YOU RUNNING THIS SCRIPT IN A GRAPHICAL ENVIRONMENT?"
+        EChoRed "[$(basename "$0")] IF SO, PLEASE CHECK YOUR DISPLAY SETTINGS."
+        exit 1
+    fi
+
+    # SET PULSEAUDIO SOCKET
+    sed -i "s~${PULSEAUDIO_LINE}~$(echo ${PULSEAUDIO_LINE} | sed "s~\"\"~\"${XDG_RUNTIME_DIR}/pulse\"~g")~g" $1
+}
+# <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<

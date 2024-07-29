@@ -52,7 +52,7 @@ fi
 # >>>----------------------------------------------------
 
 AIRSIM_WORKSPACE=${UNIT_TEST_WORKSPACE}/AirSim
-PX4_WORKSPACE=${UNIT_TEST_WORKSPACE}/PX4
+PX4_WORKSPACE=${UNIT_TEST_WORKSPACE}/PX4-Autopilot
 ROS2_WORKSPACE=${UNIT_TEST_WORKSPACE}/ROS2
 GAZEBO_CLASSIC_WORKSPACE=${UNIT_TEST_WORKSPACE}/Gazebo-Classic
 GAZEBO_WORKSPACE=${UNIT_TEST_WORKSPACE}/Gazebo
@@ -62,25 +62,32 @@ GAZEBO_WORKSPACE=${UNIT_TEST_WORKSPACE}/Gazebo
 
 # RUN PROCESS PER ARGUMENT
 if [ "$1x" == "allx" ]; then
-    EchoGreen "[$(basename "$0")] STOP ALL TEST CONTAINERS"
-    
-    EchoGreen "[$(basename "$0")] STOPPING AIRSIM CONTAINER..."
+    EchoYellow "[$(basename "$0")] STOPPING AIRSIM CONTAINER..."
     CheckFileExists ${AIRSIM_WORKSPACE}/compose.yml
-    CheckFileExists ${AIRSIM_WORKSPACE}/airsim.env
-    docker compose -f ${AIRSIM_WORKSPACE}/compose.yml --env-file ${AIRSIM_WORKSPACE}/airsim.env down
-elif [ "$1x" == "airsimx" ]; then
-    EchoGreen "[$(basename "$0")] STOP AIRSIM CONTAINER"
+    CheckFileExists ${AIRSIM_WORKSPACE}/run.env
+    docker compose -f ${AIRSIM_WORKSPACE}/compose.yml --env-file ${AIRSIM_WORKSPACE}/run.env down
 
-    EchoGreen "[$(basename "$0")] STOPPING AIRSIM CONTAINER..."
+    EchoYellow "[$(basename "$0")] STOPPING PX4-AUTOPILOT CONTAINER..."
+    CheckFileExists ${PX4_WORKSPACE}/compose.yml
+    CheckFileExists ${PX4_WORKSPACE}/run.env
+    docker compose -f ${PX4_WORKSPACE}/compose.yml --env-file ${PX4_WORKSPACE}/run.env down
+elif [ "$1x" == "airsimx" ]; then
+    EchoYellow "[$(basename "$0")] STOPPING AIRSIM CONTAINER..."
     CheckFileExists ${AIRSIM_WORKSPACE}/compose.yml
-    CheckFileExists ${AIRSIM_WORKSPACE}/airsim.env
-    docker compose -f ${AIRSIM_WORKSPACE}/compose.yml --env-file ${AIRSIM_WORKSPACE}/airsim.env down
+    CheckFileExists ${AIRSIM_WORKSPACE}/run.env
+    docker compose -f ${AIRSIM_WORKSPACE}/compose.yml --env-file ${AIRSIM_WORKSPACE}/run.env down
 elif [ "$1x" == "px4x" ]; then
-    EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
+    EchoYellow "[$(basename "$0")] STOPPING PX4-AUTOPILOT CONTAINER..."
+    CheckFileExists ${PX4_WORKSPACE}/compose.yml
+    CheckFileExists ${PX4_WORKSPACE}/run.env
+    docker compose -f ${PX4_WORKSPACE}/compose.yml --env-file ${PX4_WORKSPACE}/run.env down
 elif [ "$1x" == "ros2x" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
+    exit 1
 elif [ "$1x" == "gazebo-classicx" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
+    exit 1
 elif [ "$1x" == "gazebox" ]; then
     EchoRed "[$(basename "$0")] NOT IMPLEMENTED YET"
+    exit 1
 fi
