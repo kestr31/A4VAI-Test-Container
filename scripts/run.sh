@@ -128,7 +128,6 @@ if [ "$1x" == "airsimx" ]; then
             # ACTION: *.sh. RUN THE CONTAINER IN MANUAL MODE (run specific .sh file)
             elif [[ "$2x" == *".shx" ]]; then
                 EchoGreen "[$(basename "$0")] RUNNING AIRSIM CONTAINER WITH $2"
-                EchoGreen "[$(basename "$0")] AIRSIM CONTAINER WILL $2."
 
                 CheckFileExists ${AIRSIM_DEPLOY_DIR}/$2
                 CheckFileExecutable ${AIRSIM_DEPLOY_DIR}/$2
@@ -203,18 +202,23 @@ elif [ "$1x" == "px4x" ]; then
     fi
 # MODULE: ROS2
 elif [ "$1x" == "ros2x" ]; then
-    # SECOND ARGUMENTS: debug, stop
+    # SECOND ARGUMENTS: debug, stop, build, *.sh
     usageState2(){
         EchoRed "INVALID INPUT \"$1\". PLEASE USE ARGUMENT AS FOLLOWING:"
-        EchoRed "Usage: $0 ros2 [rdebug]"
+        EchoRed "Usage: $0 ros2 [debug|stop|build|*.sh] (target_workspace)"
         EchoRed "debug: RUN ROS2 CONTAINER IN DEBUG MODE (sleep infinity)"
         EchoRed "stop:  STOP ROS2 CONTAINER IF IT IS RUNNING"
+        EchoRed "build: BUILD ROS2 PACKAGES INSIDE THE CONTAINER"
+        EchoRed "  target_workspace: TARGET WORKSPACE TO BUILD ROS2 PACKAGES (optional, only for \"build\")"
+        EchoRed "*.sh: RUN ROS2 CONTAINER IN MANUAL MODE (run specific shell script)"
         exit 1
     }
 
-    # SECOND ARGUMENT CHECK: debug, stop
+    # SECOND ARGUMENT CHECK: debug, stop, build, *.sh
     if [ "$2x" != "debugx" ] && \
-       [ "$2x" != "stopx" ]; then
+       [ "$2x" != "stopx" ] && \
+       [ "$2x" != "buildx" ] && \
+       [[ "$2x" != *".shx" ]]; then
         usageState2 $2
         exit 1
     else
@@ -223,7 +227,7 @@ elif [ "$1x" == "ros2x" ]; then
             EchoYellow "[$(basename "$0")] THIS FEATURE IS FOR CONVENIENCE."
             EchoYellow "[$(basename "$0")] IT IS RECOMMENDED TO USE stop.sh SCRIPT TO STOP THE CONTAINER."
             ${BASE_DIR}/stop.sh ros2
-        # ACTIONS: debug
+        # ACTIONS: debug, build, *.sh
         else
             # SET BASIC ENVIRONMENT VARIABLES
             ROS2_SOURCE_DIR=${REPO_DIR}/ROS2
@@ -254,6 +258,34 @@ elif [ "$1x" == "ros2x" ]; then
             if [ "$2x" == "debugx" ]; then
                 EchoGreen "[$(basename "$0")] RUNNING ROS2 CONTAINER IN DEBUG MODE."
                 sed -i "s/ROS2_RUN_COMMAND=\"\"/ROS2_RUN_COMMAND=\'bash -c \"sleep infinity\"\'/g" ${ROS2_DEPLOY_DIR}/run.env
+            # ACTION: build. BUILD ROS2 PACKAGES INSIDE THE CONTAINER
+            elif [ "$2x" == "buildx" ]; then
+                EchoGreen "[$(basename "$0")] BUILDING ROS2 PACKAGES INSIDE THE CONTAINER."
+                EchoGreen "[$(basename "$0")] CONTAINER WILL BE STOPPED AFTER THE BUILD PROCESS."
+
+                # COPY BUILD SCRIPT AND FUNCTION DEFINITIONS
+                cp ${ROS2_SOURCE_DIR}/build.sh ${ROS2_WORKSPACE}/build.sh
+                cp -r ${BASE_DIR}/include ${ROS2_WORKSPACE}/include
+
+                # IF ADDITIONAL DIRECTORIES ARE PROVIDED, PASS THEM TO THE BUILD SCRIPT
+                if [ $# -ge 3 ]; then
+                    # DUE TO SED ESCAPE ISSUE, ADDITIONAL ENVIRONMENT VARIABLE IS SET
+                    TARGET_ROS2_WORKSPACES=${@:3}
+                    sed -i "s~ROS2_RUN_COMMAND=\"\"~ROS2_RUN_COMMAND=\'bash -c \"/home/user/workspace/build.sh ${TARGET_ROS2_WORKSPACES}\"\'~g" ${ROS2_DEPLOY_DIR}/run.env
+                # ELSE, RUN THE BUILD SCRIPT. THIS WILL BUILD ALL PACKAGES IN THE ALL DIRECTORIES THAT HAVE NON-EMPTY 'src' SUBDIRECTORY
+                else
+                    sed -i "s~ROS2_RUN_COMMAND=\"\"~ROS2_RUN_COMMAND=\'bash -c \"/home/user/workspace/build.sh\"\'~g" ${ROS2_DEPLOY_DIR}/run.env
+                fi 
+            # ACTION: *.sh. RUN THE CONTAINER IN MANUAL MODE (RUN SPECIFIC SHELL SCRIPT)
+            elif [[ "$2x" == *".shx" ]]; then
+                EchoGreen "[$(basename "$0")] RUNNING ROS2 CONTAINER WITH $2"
+
+                # CHECK IF THE SCRIPT EXISTS AND EXECUTABLE
+                CheckFileExists ${ROS2_WORKSPACE}/$2
+                CheckFileExecutable ${ROS2_WORKSPACE}/$2
+
+                # SET THE RUN COMMAND TO THE .env FILE
+                sed -i "s~ROS2_RUN_COMMAND=\"\"~ROS2_RUN_COMMAND=\'bash -c \"/home/user/workspace/$2\"\'~g" ${ROS2_DEPLOY_DIR}/run.env
             fi
 
             # DEPLOY THE CONTAINER
