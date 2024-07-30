@@ -1,26 +1,32 @@
 services:
   px4-env:
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # ------------STATIC VALUE DO NOT MODIFY-------------
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     image: ${PX4_ENV_IMAGE}
     container_name: ${PX4_ENV_CONTAINER}
     environment:
-      # -----------STATIC VALUE DO NOT MODIFY------------
       DISPLAY:                    ${PX4_DISPLAY}
       WAYLAND_DISPLAY:            ${PX4_WAYLAND_DISPLAY}
       XDG_RUNTIME_DIR:            ${XDG_RUNTIME_DIR}
-      # -------------------------------------------------
     volumes:
-      # -----------STATIC VALUE DO NOT MODIFY------------
       - ${PX4_X11_SOCKET_DIR}:${PX4_X11_SOCKET_DIR}
       - ${PX4_PULSEAUDIO_DIR}:/run/user/1000/pulse
       - ${PX4_WORKSPACE}:/home/user/workspace
-      # --------SET FOR DEVELOPMENT OR DEBUGGING---------
-      # ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ ﹀ 
-      # ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ ︿ 
-    # --UNCOMMENT TO ENABLE AMD/INTEL GPU ACCELERATION---
+    network_mode: host
+    hostname: ${PX4_ENV_CONTAINER}
+    entrypoint: ${PX4_RUN_COMMAND}
+    working_dir: /home/user/workspace
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    #
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+    # --UNCOMMENT TO ENABLE AMD/INTEL GPU ACCELERATION---
+    # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     devices:
       - /dev/dri/card0
     privileged: true
+    # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    #
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # ----UNCOMMENT TO ENABLE NVIDIA GPU ACCELERATION----
     # >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -32,8 +38,7 @@ services:
     #           count: 1
     #           capabilities: [gpu]
     # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-    entrypoint: ${PX4_RUN_COMMAND}
-    working_dir: /home/user/workspace
+
 
 # DOCKER COMPOSE UP COMMAND
 # docker compose -f docker-compose.yml --env-file run.env up
