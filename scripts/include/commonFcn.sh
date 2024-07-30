@@ -297,10 +297,13 @@ SetComposeDisplay(){
 
     if [ -z "${DISPLAY_LINE}" ]; then
         EchoRed "[$(basename "$0")] *_DISPLAY LINE DOES NOT EXIST."
+        exit 1
     elif [ -z "${WAYLAND_DISPLAY_LINE}" ]; then
         EchoRed "[$(basename "$0")] *_WAYLAND_DISPLAY DOES NOT EXIST."
+        exit 1
     elif [ -z "${PULSEAUDIO_LINE}" ]; then
         EchoRed "[$(basename "$0")] *_PULSEAUDIO_DIR DOES NOT EXIST."
+        exit 1
     fi
 
     # SET DISPLAY OR WAYLAND_DISPLAY. IF NO DISPLAY, KILL THE SCRIPT.
